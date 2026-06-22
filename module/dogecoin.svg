@@ -1,9 +1,0 @@
-<!--
-  Simple Dogecoin logo icon for the AirGap isolated module.
-  This SVG consists of a golden circle and a white letter Ð in the centre.
-  The golden colour used here (#C2A633) is similar to the hue often used to represent Dogecoin, but it does not copy any official logo artwork.  The letter Ð is white and centred.
--->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <circle cx="64" cy="64" r="64" fill="#C2A633" />
-  <text x="64" y="86" font-size="64" font-weight="bold" text-anchor="middle" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif">Ð</text>
-</svg>

@@ -4,15 +4,13 @@ Dogecoin isolated module for AirGap Wallet and AirGap Vault.
 
 This module adds Dogecoin account sync, address derivation, balance lookup, transaction preparation, offline signing, and signed transaction broadcast support through AirGap's isolated module system.
 
-NOTE: This module is still experimental, I am not responsible for any lost funds. Please make sure to back up your keys.
-
 ## Repository
 
 https://github.com/libfrontcrypto/airgap-iso-doge
 
 ## Status
 
-Version `0.1.16` is the first working release candidate for the full Wallet/Vault flow tested during development:
+Version `0.1.17` is the source-first release line for the full Wallet/Vault flow tested during development:
 
 - import isolated module
 - derive Dogecoin receive address
@@ -23,16 +21,11 @@ Version `0.1.16` is the first working release candidate for the full Wallet/Vaul
 - scan signed QR back into Wallet
 - decode signed transaction details for broadcast
 
-## Module Package
+## Source Layout
 
-The signed AirGap module ZIP contains:
+The GitHub project should contain the TypeScript source under `src/`, the signing script under `scripts/`, and the package/build metadata needed to reproduce the module locally.
 
-- `index.js`
-- `manifest.json`
-- `dogecoin.svg`
-- `module.sig`
-
-The module manifest uses the `dogecoinModule` namespace and includes `index.js` and `dogecoin.svg`.
+Generated files such as `dist/`, `module/`, and release ZIPs are intentionally excluded from the source tree.
 
 ## Build
 
@@ -60,18 +53,7 @@ Sign the module:
 MODULE_ED25519_PRIVATE_KEY=<hex-private-key> npm run sign
 ```
 
-The signing public key must match `module/manifest.json`.
-
-## Support Our Work
-If you feel like supporting the developer, here are a couple of different tip addresses (DOGE goes straight to my own AirGap Vault!)
-
-BTC: bc1q7p8ew76ehjrf9rmhdd93xe9lkqpufwkwl56r0e
-
-BTC (LN): libfrontcrypto@coinos.pro
-
-DOGE: DG5vRxuUjFj4SxFU3pcc3HAHgqh8kEiZyC
-
-ETH/ERC-20: 0x523f461f87170b090732c49bb6722C975C66aa18
+The signing public key must match `module/manifest.json` in the built output, not the source tree.
 
 ## License
 

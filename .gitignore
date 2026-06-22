@@ -1,0 +1,16 @@
+node_modules/
+dist/
+module/
+verify*/
+
+*.zip
+
+signing-keypair.json
+MODULE_SIGNING_KEY_BACKUP.txt
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
