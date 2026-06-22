@@ -89,7 +89,7 @@ function createEntry(name: string, data: Buffer, offset: number, timestamp: Date
 function main(): void {
   const root = process.cwd()
   const moduleDir = join(root, 'module')
-  const manifest = JSON.parse(readFileSync(join(moduleDir, 'manifest.json'), 'utf8'))
+  const manifest = JSON.parse(readFileSync(join(moduleDir, 'manifest.json'), 'utf8').replace(/^\uFEFF/, ''))
   const version = manifest.version ?? 'dev'
   const outputPath = join(moduleDir, `airgap-iso-doge-${version}-dev.zip`)
   const timestamp = new Date(1980, 0, 1, 0, 0, 0)
