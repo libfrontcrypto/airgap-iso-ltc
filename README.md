@@ -4,6 +4,8 @@ Dogecoin isolated module for AirGap Wallet and AirGap Vault.
 
 This module adds Dogecoin account sync, address derivation, balance lookup, transaction preparation, offline signing, and signed transaction broadcast support through AirGap's isolated module system.
 
+NOTE: This module is still experimental, I am not responsible for any lost funds. Please make sure to back up your keys.
+
 ## Repository
 
 https://github.com/libfrontcrypto/airgap-iso-doge
