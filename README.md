@@ -27,6 +27,17 @@ The GitHub project should contain the TypeScript source under `src/`, the signin
 
 Generated files such as `dist/`, `module/`, and release ZIPs are intentionally excluded from the source tree.
 
+## Support Our Work
+If you feel like supporting the developer, here are a couple of different tip addresses:
+
+BTC: bc1q7p8ew76ehjrf9rmhdd93xe9lkqpufwkwl56r0e
+
+BTC (LN): libfrontcrypto@coinos.pro
+
+DOGE: DG5vRxuUjFj4SxFU3pcc3HAHgqh8kEiZyC
+
+ETH/ERC-20: 0x523f461f87170b090732c49bb6722C975C66aa18
+
 ## Build
 
 Install dependencies:
