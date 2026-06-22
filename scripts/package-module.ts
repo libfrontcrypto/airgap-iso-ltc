@@ -38,8 +38,8 @@ function writeUInt32(value: number): Buffer {
   return buffer
 }
 
-function createEntry(name: string, data: Buffer, offset: number, timestamp: Date) {
-  const compressed = deflateRawSync(data)
+function createEntry(name: string, data: Buffer, offset: number, timestamp: Date, method: 0 | 8 = 8) {
+  const compressed = method === 8 ? deflateRawSync(data) : data
   const checksum = crc32(data)
   const encodedName = Buffer.from(name, 'utf8')
   const { date, time } = dosDateTime(timestamp)
@@ -48,7 +48,7 @@ function createEntry(name: string, data: Buffer, offset: number, timestamp: Date
     writeUInt32(0x04034b50),
     writeUInt16(20),
     writeUInt16(0x0800),
-    writeUInt16(8),
+    writeUInt16(method),
     writeUInt16(time),
     writeUInt16(date),
     writeUInt32(checksum),
@@ -64,7 +64,7 @@ function createEntry(name: string, data: Buffer, offset: number, timestamp: Date
     writeUInt16(20),
     writeUInt16(20),
     writeUInt16(0x0800),
-    writeUInt16(8),
+    writeUInt16(method),
     writeUInt16(time),
     writeUInt16(date),
     writeUInt32(checksum),
@@ -92,12 +92,17 @@ function main(): void {
   const manifest = JSON.parse(readFileSync(join(moduleDir, 'manifest.json'), 'utf8'))
   const version = manifest.version ?? 'dev'
   const outputPath = join(moduleDir, `airgap-iso-doge-${version}-dev.zip`)
-  const timestamp = new Date(2026, 0, 1, 0, 0, 0)
+  const timestamp = new Date(1980, 0, 1, 0, 0, 0)
   const locals: Buffer[] = []
   const centrals: Buffer[] = []
   let offset = 0
 
   mkdirSync(moduleDir, { recursive: true })
+
+  const directoryEntry = createEntry('module/', Buffer.alloc(0), offset, timestamp, 8)
+  locals.push(directoryEntry.local)
+  centrals.push(directoryEntry.central)
+  offset += directoryEntry.local.length
 
   for (const file of files) {
     const entryName = `module/${file}`
@@ -112,8 +117,8 @@ function main(): void {
     writeUInt32(0x06054b50),
     writeUInt16(0),
     writeUInt16(0),
-    writeUInt16(files.length),
-    writeUInt16(files.length),
+    writeUInt16(files.length + 1),
+    writeUInt16(files.length + 1),
     writeUInt32(centralDirectory.length),
     writeUInt32(offset),
     writeUInt16(0)
