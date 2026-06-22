@@ -1,9 +1,13 @@
 node_modules/
 dist/
-module/
 verify*/
 
 *.zip
+
+module/index.js
+module/index.browserify.js
+module/module.sig
+module/*.zip
 
 signing-keypair.json
 MODULE_SIGNING_KEY_BACKUP.txt
