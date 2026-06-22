@@ -1,8 +1,13 @@
 An Isolated Module built to implement Dogecoin support into AirGap Vault and Airgap Wallet. Published under GPL v3.0.
 
 If you feel like supporting the developer, here are a couple of different tip addresses (DOGE goes straight to my own AirGap Vault!)
+
 BTC: bc1q7p8ew76ehjrf9rmhdd93xe9lkqpufwkwl56r0e
+
 BTC (LN):libfrontcrypto@coinos.pro
+
 BTC (LN, BOLT12): lno1pgt4g6tsypnx7u3qga5hgjr4vgs9qun0dfjkxarnzrhq8pjw7qjlm68mtp7e3yvxee4y5xrgjhhyf2fxhlphpckrvevh50u0qtzgfs5r5tqtkcxlcxucjme9zx4rrp78484q0wv3vqtgvrekx9uduqsz4mtl6c8wgruk9e9u6hhx0uue8fv2g7t9fvgjvn3zxwtdzlgtgwdsqva650sdz5n4jrukdapq7vs54z483m4km3srfcckq2ralamyl6muq4kykv8x9cq68arzaxt5rn56edws8zy9qtp9atrcwdm6lkjrt87fnfc0qzncvxxav0lqp2al056dcdu7852q6qpj0exl4pne09lptf73kz2cgapnyt7ynu8uzm9lccze5j6zd8f2wra7kc0qq2pq93wf7ulf20epzxszgy7jzcss994dyatzdva9xk8nwcy8s774n0uzjaqtxgqtwg9r2lle56hteg3l
+
 DOGE: DG5vRxuUjFj4SxFU3pcc3HAHgqh8kEiZyC
+
 ETH/ERC-20: 0x523f461f87170b090732c49bb6722C975C66aa18
