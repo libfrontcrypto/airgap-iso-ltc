@@ -25,8 +25,6 @@ Version `0.1.17` is the source-first release line for the full Wallet/Vault flow
 
 The GitHub project should contain the TypeScript source under `src/`, the signing script under `scripts/`, and the package/build metadata needed to reproduce the module locally.
 
-Generated files such as `dist/`, `module/`, and release ZIPs are intentionally excluded from the source tree.
-
 ## Support Our Work
 If you feel like supporting the developer, here are a couple of different tip addresses:
 
