@@ -1,13 +1,14 @@
 {
   "name": "@libfrontcrypto/airgap-iso-doge",
-  "version": "0.1.17",
+  "version": "1.0.0",
   "description": "Dogecoin isolated module for AirGap Wallet and Vault",
   "main": "src/index.ts",
   "scripts": {
     "build": "tsc",
     "sign": "tsx scripts/sign-module.ts",
     "browserify": "browserify ./dist/index.js -s dogecoinModule -o ./module/index.js",
-    "bundle": "npm run build && npm run browserify && npm run sign && powershell -NoProfile -Command \"Push-Location module; Compress-Archive -LiteralPath index.js,manifest.json,dogecoin.svg,module.sig -DestinationPath airgap-iso-doge-ready.zip -Force; Pop-Location\""
+    "package": "tsx scripts/package-module.ts",
+    "bundle": "npm run build && npm run browserify && npm run sign && npm run package"
   },
   "repository": {
     "type": "git",
