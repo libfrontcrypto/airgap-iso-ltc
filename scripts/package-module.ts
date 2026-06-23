@@ -89,15 +89,17 @@ function createEntry(name: string, data: Buffer, offset: number, timestamp: Date
 function main(): void {
   const root = process.cwd()
   const moduleDir = join(root, 'module')
+  const artifactsDir = join(root, 'build-artifacts')
   const manifest = JSON.parse(readFileSync(join(moduleDir, 'manifest.json'), 'utf8').replace(/^\uFEFF/, ''))
   const version = manifest.version ?? 'dev'
-  const outputPath = join(moduleDir, `airgap-iso-ltc-${version}-dev.zip`)
+  const outputPath = join(artifactsDir, `airgap-iso-ltc-${version}-dev.zip`)
   const timestamp = new Date(1980, 0, 1, 0, 0, 0)
   const locals: Buffer[] = []
   const centrals: Buffer[] = []
   let offset = 0
 
   mkdirSync(moduleDir, { recursive: true })
+  mkdirSync(artifactsDir, { recursive: true })
 
   const directoryEntry = createEntry('module/', Buffer.alloc(0), offset, timestamp, 8)
   locals.push(directoryEntry.local)
