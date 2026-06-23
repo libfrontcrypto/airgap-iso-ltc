@@ -31,7 +31,7 @@ export class LitecoinApi {
   private readonly blockchairBaseUrl: string = 'https://api.blockchair.com/litecoin'
 
   private get readBaseUrls(): string[] {
-    const urls = [this.blockchairBaseUrl, this.baseUrl]
+    const urls = [this.baseUrl, this.blockchairBaseUrl]
 
     return urls.filter((url, index) => urls.indexOf(url) === index)
   }
@@ -75,19 +75,25 @@ export class LitecoinApi {
   }
 
   private async getJsonResults(paths: (baseUrl: string) => string): Promise<Array<{ baseUrl: string; json: any }>> {
-    const results: Array<{ baseUrl: string; json: any }> = []
-    for (const baseUrl of this.readBaseUrls) {
-      const json = await this.getJsonOrUndefined(paths(baseUrl), baseUrl)
-      if (json !== undefined) {
-        results.push({ baseUrl, json })
-      }
-    }
+    const results = await Promise.all(
+      this.readBaseUrls.map(async (baseUrl) => ({
+        baseUrl,
+        json: await this.getJsonOrUndefined(paths(baseUrl), baseUrl)
+      }))
+    )
 
-    return results
+    return results.filter((result): result is { baseUrl: string; json: any } => result.json !== undefined)
   }
 
   private async getFirstJson(paths: (baseUrl: string) => string): Promise<{ baseUrl: string; json: any } | undefined> {
-    return (await this.getJsonResults(paths))[0]
+    for (const baseUrl of this.readBaseUrls) {
+      const json = await this.getJsonOrUndefined(paths(baseUrl), baseUrl)
+      if (json !== undefined) {
+        return { baseUrl, json }
+      }
+    }
+
+    return undefined
   }
 
   private normalizeInteger(value: unknown): string | undefined {
@@ -315,8 +321,8 @@ export class LitecoinApi {
       }))
     }
 
-    if (Array.isArray(json.txrefs)) {
-      return json.txrefs.slice(0, limit).map((tx: any) => ({
+    if (Array.isArray(json.txrefs) || Array.isArray(json.unconfirmed_txrefs)) {
+      return [...(json.txrefs ?? []), ...(json.unconfirmed_txrefs ?? [])].slice(0, limit).map((tx: any) => ({
         hash: tx.tx_hash,
         blockHeight: tx.block_height,
         timestamp: tx.confirmed ? Math.floor(new Date(tx.confirmed).getTime() / 1000) : undefined,
