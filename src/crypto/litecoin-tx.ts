@@ -1,12 +1,17 @@
 import {
-  DogecoinSignedTransaction,
-  DogecoinUnsignedTransaction
-} from '../protocol/DogecoinTypes'
-import { DOGECOIN_NETWORK } from './dogecoin-address'
+  LitecoinSignedTransaction,
+  LitecoinUnsignedTransaction
+} from '../protocol/LitecoinTypes'
+import { LITECOIN_NETWORK } from './litecoin-address'
 
 const BitGo = require('@airgap/coinlib-core/dependencies/src/bitgo-utxo-lib-5d91049fd7a988382df81c8260e244ee56d57aac/src')
 const BigInteger = require('@airgap/coinlib-core/dependencies/src/bigi-1.4.2/lib/index')
 const Buffer = require('@airgap/coinlib-core/dependencies/src/safe-buffer-5.2.0/index').Buffer
+
+const LITECOIN_LEGACY_P2SH_NETWORK = {
+  ...LITECOIN_NETWORK,
+  scriptHash: 0x05
+}
 
 function hexToBytes(hex: string): Uint8Array {
   const normalized = hex.startsWith('0x') ? hex.slice(2) : hex
@@ -22,17 +27,25 @@ function hexToBytes(hex: string): Uint8Array {
   return bytes
 }
 
-export async function signDogecoinP2PKHTransaction(
-  tx: DogecoinUnsignedTransaction,
+function outputScriptFromAddress(address: string): Buffer {
+  try {
+    return BitGo.address.toOutputScript(address, LITECOIN_NETWORK)
+  } catch (error) {
+    return BitGo.address.toOutputScript(address, LITECOIN_LEGACY_P2SH_NETWORK)
+  }
+}
+
+export async function signLitecoinP2PKHTransaction(
+  tx: LitecoinUnsignedTransaction,
   privKeyHex: string
 ): Promise<string> {
   const privateKey = BigInteger.fromBuffer(Buffer.from(hexToBytes(privKeyHex)))
-  const keyPair = new BitGo.ECPair(privateKey, undefined, { compressed: true, network: DOGECOIN_NETWORK })
-  const builder = new BitGo.TransactionBuilder(DOGECOIN_NETWORK)
+  const keyPair = new BitGo.ECPair(privateKey, undefined, { compressed: true, network: LITECOIN_NETWORK })
+  const builder = new BitGo.TransactionBuilder(LITECOIN_NETWORK)
   const signingAddress = BitGo.address.toBase58Check(
     BitGo.crypto.hash160(keyPair.getPublicKeyBuffer()),
-    DOGECOIN_NETWORK.pubKeyHash,
-    DOGECOIN_NETWORK
+    LITECOIN_NETWORK.pubKeyHash,
+    LITECOIN_NETWORK
   )
 
   tx.inputs.forEach((input) => {
@@ -41,7 +54,7 @@ export async function signDogecoinP2PKHTransaction(
     }
 
     if (input.scriptPubKey) {
-      const expectedScript = BitGo.address.toOutputScript(input.address, DOGECOIN_NETWORK).toString('hex')
+      const expectedScript = outputScriptFromAddress(input.address).toString('hex')
       if (input.scriptPubKey !== expectedScript) {
         throw new Error(`Input script does not match address ${input.address}`)
       }
@@ -51,7 +64,7 @@ export async function signDogecoinP2PKHTransaction(
   })
 
   tx.outputs.forEach((output) => {
-    builder.addOutput(output.address, Number(output.value))
+    builder.addOutput(outputScriptFromAddress(output.address), Number(output.value))
   })
 
   tx.inputs.forEach((_input, index) => {
@@ -61,11 +74,11 @@ export async function signDogecoinP2PKHTransaction(
   return builder.build().toHex()
 }
 
-export function decodeDogecoinP2PKHOutputs(rawTxHex: string): Array<{ address: string; value: string }> {
+export function decodeLitecoinP2PKHOutputs(rawTxHex: string): Array<{ address: string; value: string }> {
   const transaction = BitGo.Transaction.fromHex(rawTxHex)
 
   return transaction.outs.map((output: any) => ({
-    address: BitGo.address.fromOutputScript(output.script, DOGECOIN_NETWORK),
+    address: BitGo.address.fromOutputScript(output.script, LITECOIN_NETWORK),
     value: String(output.value)
   }))
 }

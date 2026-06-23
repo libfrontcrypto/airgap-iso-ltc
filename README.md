@@ -1,19 +1,19 @@
-# AirGap Isolated Module for Dogecoin
+# AirGap Isolated Module for Litecoin
 
-Dogecoin isolated module for AirGap Wallet and AirGap Vault.
+Litecoin isolated module for AirGap Wallet and AirGap Vault.
 
-This module adds Dogecoin account sync, address derivation, balance lookup, transaction preparation, offline signing, and signed transaction broadcast support through AirGap's isolated module system.
+This module adds Litecoin account sync, legacy P2PKH address derivation, balance lookup, transaction preparation, offline signing, and signed transaction broadcast support through AirGap's isolated module system.
 
 ## Repository
 
-https://github.com/libfrontcrypto/airgap-iso-doge
+https://github.com/libfrontcrypto/airgap-iso-ltc
 
 ## Status
 
-Version `0.1.17` is the source-first release line for the full Wallet/Vault flow tested during development:
+Version `0.1.0` starts the source-first Litecoin test build line. Before publishing any final release, verify the full Wallet/Vault flow with a locally built module zip:
 
 - import isolated module
-- derive Dogecoin receive address
+- derive Litecoin receive address
 - sync account from Vault to Wallet with QR Code V3
 - load balance and prepare a transaction
 - generate transaction QR in Wallet
@@ -25,16 +25,7 @@ Version `0.1.17` is the source-first release line for the full Wallet/Vault flow
 
 The GitHub project should contain the TypeScript source under `src/`, the signing script under `scripts/`, and the package/build metadata needed to reproduce the module locally.
 
-## Support Our Work
-If you feel like supporting the developer, here are a couple of different tip addresses:
-
-BTC: bc1q7p8ew76ehjrf9rmhdd93xe9lkqpufwkwl56r0e
-
-BTC (LN): libfrontcrypto@coinos.pro
-
-DOGE: DG5vRxuUjFj4SxFU3pcc3HAHgqh8kEiZyC
-
-ETH/ERC-20: 0x523f461f87170b090732c49bb6722C975C66aa18
+Generated bundles, signatures, and zip files under `module/` are build artifacts and should not be treated as source.
 
 ## Build
 
@@ -62,7 +53,15 @@ Sign the module:
 MODULE_ED25519_PRIVATE_KEY=<hex-private-key> npm run sign
 ```
 
+Package the module zip:
+
+```bash
+npm run package
+```
+
 The signing public key must match `module/manifest.json` in the built output, not the source tree.
+
+The checked-in manifest public key is suitable for the generated local test artifact in this workspace. Replace it with the release signing public key and sign with the corresponding private key before publishing any public release.
 
 ## License
 

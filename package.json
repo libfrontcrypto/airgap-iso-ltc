@@ -1,22 +1,23 @@
 {
-  "name": "@libfrontcrypto/airgap-iso-doge",
-  "version": "1.0.0",
-  "description": "Dogecoin isolated module for AirGap Wallet and Vault",
+  "name": "@libfrontcrypto/airgap-iso-ltc",
+  "version": "0.1.0",
+  "description": "Litecoin isolated module for AirGap Wallet and Vault",
   "main": "src/index.ts",
   "scripts": {
     "build": "tsc",
     "sign": "tsx scripts/sign-module.ts",
-    "browserify": "browserify ./dist/index.js -s dogecoinModule -o ./module/index.js",
+    "browserify": "browserify ./dist/index.js -s litecoinModule -o ./module/index.js && npm run sanitize-bundle",
+    "sanitize-bundle": "tsx scripts/sanitize-bundle.ts",
     "package": "tsx scripts/package-module.ts",
     "bundle": "npm run build && npm run browserify && npm run sign && npm run package"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/libfrontcrypto/airgap-iso-doge"
+    "url": "https://github.com/libfrontcrypto/airgap-iso-ltc"
   },
   "keywords": [
     "airgap",
-    "dogecoin",
+    "litecoin",
     "isolated-module",
     "wallet",
     "vault"

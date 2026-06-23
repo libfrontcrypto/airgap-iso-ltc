@@ -2,7 +2,7 @@ import { deflateRawSync } from 'zlib'
 import { mkdirSync, readFileSync, writeFileSync } from 'fs'
 import { join } from 'path'
 
-const files = ['dogecoin.svg', 'index.js', 'manifest.json', 'module.sig']
+const files = ['litecoin.svg', 'index.js', 'manifest.json', 'module.sig']
 
 function crc32(buffer: Buffer): number {
   let crc = 0xffffffff
@@ -91,7 +91,7 @@ function main(): void {
   const moduleDir = join(root, 'module')
   const manifest = JSON.parse(readFileSync(join(moduleDir, 'manifest.json'), 'utf8').replace(/^\uFEFF/, ''))
   const version = manifest.version ?? 'dev'
-  const outputPath = join(moduleDir, `airgap-iso-doge-${version}-dev.zip`)
+  const outputPath = join(moduleDir, `airgap-iso-ltc-${version}-dev.zip`)
   const timestamp = new Date(1980, 0, 1, 0, 0, 0)
   const locals: Buffer[] = []
   const centrals: Buffer[] = []

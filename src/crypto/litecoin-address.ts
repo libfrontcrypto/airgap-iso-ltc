@@ -4,25 +4,26 @@ import { encodeDerivative } from '@airgap/crypto'
 const BitGo = require('@airgap/coinlib-core/dependencies/src/bitgo-utxo-lib-5d91049fd7a988382df81c8260e244ee56d57aac/src')
 const Buffer = require('@airgap/coinlib-core/dependencies/src/safe-buffer-5.2.0/index').Buffer
 
-export const DOGECOIN_NETWORK = {
-  messagePrefix: '\x19Dogecoin Signed Message:\n',
+export const LITECOIN_NETWORK = {
+  messagePrefix: '\x19Litecoin Signed Message:\n',
   bip32: {
-    public: 0x02facafd,
-    private: 0x02fac398
+    public: 0x0488b21e,
+    private: 0x0488ade4
   },
-  pubKeyHash: 0x1e,
-  scriptHash: 0x16,
-  wif: 0x9e,
-  coin: 'dogecoin',
+  bech32: 'ltc',
+  pubKeyHash: 0x30,
+  scriptHash: 0x32,
+  wif: 0xb0,
+  coin: 'litecoin',
   hashFunctions: {
     address: BitGo.crypto.hash256,
     transaction: BitGo.crypto.hash256
   }
 }
 
-const DOGECOIN_BIP32_VERSION = {
-  publicKey: DOGECOIN_NETWORK.bip32.public.toString(16).padStart(8, '0'),
-  secretKey: DOGECOIN_NETWORK.bip32.private.toString(16).padStart(8, '0')
+const LITECOIN_BIP32_VERSION = {
+  publicKey: LITECOIN_NETWORK.bip32.public.toString(16).padStart(8, '0'),
+  secretKey: LITECOIN_NETWORK.bip32.private.toString(16).padStart(8, '0')
 }
 
 function hexToBytes(hex: string): Uint8Array {
@@ -45,31 +46,31 @@ function bytesToHex(bytes: Uint8Array): string {
     .join('')
 }
 
-export function dogecoinAddressFromPublicKey(publicKeyHex: string): string {
+export function litecoinAddressFromPublicKey(publicKeyHex: string): string {
   const publicKey = Buffer.from(hexToBytes(publicKeyHex))
   const publicKeyHash = BitGo.crypto.hash160(publicKey)
 
-  return BitGo.address.toBase58Check(publicKeyHash, DOGECOIN_NETWORK.pubKeyHash, DOGECOIN_NETWORK)
+  return BitGo.address.toBase58Check(publicKeyHash, LITECOIN_NETWORK.pubKeyHash, LITECOIN_NETWORK)
 }
 
 function nodeFromDerivative(derivative: CryptoDerivative): any {
-  const encoded = encodeDerivative('bip32', derivative, DOGECOIN_BIP32_VERSION)
+  const encoded = encodeDerivative('bip32', derivative, LITECOIN_BIP32_VERSION)
 
-  return BitGo.HDNode.fromBase58(encoded.secretKey, DOGECOIN_NETWORK)
+  return BitGo.HDNode.fromBase58(encoded.secretKey, LITECOIN_NETWORK)
 }
 
 function nodeFromExtendedSecretKey(extendedSecretKey: ExtendedSecretKey): any {
-  return BitGo.HDNode.fromBase58(extendedSecretKey.value, DOGECOIN_NETWORK)
+  return BitGo.HDNode.fromBase58(extendedSecretKey.value, LITECOIN_NETWORK)
 }
 
 function nodeFromExtendedPublicKey(extendedPublicKey: ExtendedPublicKey): any {
-  return BitGo.HDNode.fromBase58(extendedPublicKey.value, DOGECOIN_NETWORK)
+  return BitGo.HDNode.fromBase58(extendedPublicKey.value, LITECOIN_NETWORK)
 }
 
 function keyPairFromNode(node: any): KeyPair {
   const keyPair = node.keyPair
   if (!keyPair) {
-    throw new Error('Failed to derive Dogecoin private key')
+    throw new Error('Failed to derive Litecoin private key')
   }
 
   const privateKeyBytes = keyPair.getPrivateKeyBuffer()
@@ -89,11 +90,11 @@ function keyPairFromNode(node: any): KeyPair {
   }
 }
 
-export async function deriveDogecoinKeyPair(derivative: CryptoDerivative): Promise<KeyPair> {
+export async function deriveLitecoinKeyPair(derivative: CryptoDerivative): Promise<KeyPair> {
   return keyPairFromNode(nodeFromDerivative(derivative).derive(0).derive(0))
 }
 
-export async function deriveDogecoinExtendedKeyPair(derivative: CryptoDerivative): Promise<ExtendedKeyPair> {
+export async function deriveLitecoinExtendedKeyPair(derivative: CryptoDerivative): Promise<ExtendedKeyPair> {
   const node = nodeFromDerivative(derivative)
 
   return {
@@ -110,7 +111,7 @@ export async function deriveDogecoinExtendedKeyPair(derivative: CryptoDerivative
   }
 }
 
-export async function deriveDogecoinPublicKeyFromExtendedPublicKey(
+export async function deriveLitecoinPublicKeyFromExtendedPublicKey(
   extendedPublicKey: ExtendedPublicKey,
   visibilityIndex: number,
   addressIndex: number
@@ -124,7 +125,7 @@ export async function deriveDogecoinPublicKeyFromExtendedPublicKey(
   }
 }
 
-export async function deriveDogecoinSecretKeyFromExtendedSecretKey(
+export async function deriveLitecoinSecretKeyFromExtendedSecretKey(
   extendedSecretKey: ExtendedSecretKey,
   visibilityIndex: number,
   addressIndex: number
@@ -138,8 +139,8 @@ export async function deriveDogecoinSecretKeyFromExtendedSecretKey(
   }
 }
 
-export async function dogecoinAddressFromExtendedPublicKey(extendedPublicKey: ExtendedPublicKey): Promise<string> {
-  const publicKey = await deriveDogecoinPublicKeyFromExtendedPublicKey(extendedPublicKey, 0, 0)
+export async function litecoinAddressFromExtendedPublicKey(extendedPublicKey: ExtendedPublicKey): Promise<string> {
+  const publicKey = await deriveLitecoinPublicKeyFromExtendedPublicKey(extendedPublicKey, 0, 0)
 
-  return dogecoinAddressFromPublicKey(publicKey.value)
+  return litecoinAddressFromPublicKey(publicKey.value)
 }

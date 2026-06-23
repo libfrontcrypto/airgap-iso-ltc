@@ -2,17 +2,17 @@ import { AirGapV3SerializerCompanion, V3SchemaConfiguration } from '@airgap/modu
 import { AccountShareResponse, IACMessageType, SchemaRoot, TransactionSignRequest, TransactionSignResponse } from '@airgap/serializer'
 
 import {
-  DogecoinUnsignedTransaction,
-  DogecoinSignedTransaction
-} from '../protocol/DogecoinTypes'
-import { deriveDogecoinPublicKeyFromExtendedPublicKey } from '../crypto/dogecoin-address'
+  LitecoinUnsignedTransaction,
+  LitecoinSignedTransaction
+} from '../protocol/LitecoinTypes'
+import { deriveLitecoinPublicKeyFromExtendedPublicKey } from '../crypto/litecoin-address'
 
 const accountShareResponse: SchemaRoot = require('@airgap/serializer/v3/schemas/generated/account-share-response.json')
-const dogecoinTransactionSignRequest: SchemaRoot = {
-  $ref: '#/definitions/DogecoinTransactionSignRequest',
+const LitecoinTransactionSignRequest: SchemaRoot = {
+  $ref: '#/definitions/LitecoinTransactionSignRequest',
   $schema: 'http://json-schema.org/draft-07/schema#',
   definitions: {
-    DogecoinTransactionSignRequest: {
+    LitecoinTransactionSignRequest: {
       additionalProperties: false,
       properties: {
         publicKey: { type: 'string' },
@@ -60,11 +60,11 @@ const dogecoinTransactionSignRequest: SchemaRoot = {
     }
   }
 } as any
-const dogecoinTransactionSignResponse: SchemaRoot = {
-  $ref: '#/definitions/DogecoinTransactionSignResponse',
+const LitecoinTransactionSignResponse: SchemaRoot = {
+  $ref: '#/definitions/LitecoinTransactionSignResponse',
   $schema: 'http://json-schema.org/draft-07/schema#',
   definitions: {
-    DogecoinTransactionSignResponse: {
+    LitecoinTransactionSignResponse: {
       additionalProperties: false,
       properties: {
         accountIdentifier: { type: 'string' },
@@ -77,28 +77,28 @@ const dogecoinTransactionSignResponse: SchemaRoot = {
 } as any
 
 /**
- * Serializer companion for Dogecoin. Converts internal transaction objects
+ * Serializer companion for Litecoin. Converts internal transaction objects
  * into the AirGap V3 message format used for QR transfer between wallet and
  * vault and back again. This implementation follows a minimal schema: the
  * unsigned transaction is embedded directly in the sign request and the
  * signed transaction is embedded directly in the sign response.
  */
-export class DogecoinV3SerializerCompanion implements AirGapV3SerializerCompanion {
+export class LitecoinV3SerializerCompanion implements AirGapV3SerializerCompanion {
   public readonly schemas: V3SchemaConfiguration[] = [
     {
       type: IACMessageType.AccountShareResponse,
       schema: { schema: accountShareResponse },
-      protocolIdentifier: 'dogecoin'
+      protocolIdentifier: 'litecoin'
     },
     {
       type: IACMessageType.TransactionSignRequest,
-      schema: { schema: dogecoinTransactionSignRequest },
-      protocolIdentifier: 'dogecoin'
+      schema: { schema: LitecoinTransactionSignRequest },
+      protocolIdentifier: 'litecoin'
     },
     {
       type: IACMessageType.TransactionSignResponse,
-      schema: { schema: dogecoinTransactionSignResponse },
-      protocolIdentifier: 'dogecoin'
+      schema: { schema: LitecoinTransactionSignResponse },
+      protocolIdentifier: 'litecoin'
     }
   ]
 
@@ -123,8 +123,8 @@ export class DogecoinV3SerializerCompanion implements AirGapV3SerializerCompanio
   public async fromTransactionSignRequest(
     _identifier: string,
     transactionSignRequest: TransactionSignRequest
-  ): Promise<DogecoinUnsignedTransaction> {
-    return transactionSignRequest.transaction as unknown as DogecoinUnsignedTransaction
+  ): Promise<LitecoinUnsignedTransaction> {
+    return transactionSignRequest.transaction as unknown as LitecoinUnsignedTransaction
   }
 
   public async validateTransactionSignRequest(
@@ -132,7 +132,7 @@ export class DogecoinV3SerializerCompanion implements AirGapV3SerializerCompanio
     transactionSignRequest: TransactionSignRequest
   ): Promise<boolean> {
     return (
-      identifier === 'dogecoin' &&
+      identifier === 'litecoin' &&
       typeof transactionSignRequest.publicKey === 'string' &&
       (transactionSignRequest.transaction as any)?.type === 'unsigned'
     )
@@ -152,7 +152,7 @@ export class DogecoinV3SerializerCompanion implements AirGapV3SerializerCompanio
   public async fromTransactionSignResponse(
     _identifier: string,
     transactionSignResponse: TransactionSignResponse
-  ): Promise<DogecoinSignedTransaction> {
+  ): Promise<LitecoinSignedTransaction> {
     return {
       type: 'signed',
       transaction: transactionSignResponse.transaction
@@ -164,7 +164,7 @@ export class DogecoinV3SerializerCompanion implements AirGapV3SerializerCompanio
     transactionSignResponse: TransactionSignResponse
   ): Promise<boolean> {
     return (
-      identifier === 'dogecoin' &&
+      identifier === 'litecoin' &&
       typeof transactionSignResponse.accountIdentifier === 'string' &&
       typeof transactionSignResponse.transaction === 'string' &&
       transactionSignResponse.transaction.length > 0
@@ -178,10 +178,10 @@ export class DogecoinV3SerializerCompanion implements AirGapV3SerializerCompanio
     masterFingerprint: string = '',
     isActive: boolean = true,
     groupId: string = '',
-    groupLabel: string = 'Dogecoin'
+    groupLabel: string = 'Litecoin'
   ): Promise<AccountShareResponse> {
     const walletPublicKey = this.isExtendedPublicKey(publicKey)
-      ? (await deriveDogecoinPublicKeyFromExtendedPublicKey(
+      ? (await deriveLitecoinPublicKeyFromExtendedPublicKey(
           { type: 'xpub', format: 'encoded', value: publicKey },
           0,
           0
@@ -198,7 +198,7 @@ export class DogecoinV3SerializerCompanion implements AirGapV3SerializerCompanio
       groupId,
       groupLabel
     }))) {
-      throw new Error('Invalid Dogecoin account share response')
+      throw new Error('Invalid Litecoin account share response')
     }
 
     return {
@@ -223,7 +223,7 @@ export class DogecoinV3SerializerCompanion implements AirGapV3SerializerCompanio
     identifier: string,
     accountShareResponse: AccountShareResponse
   ): Promise<boolean> {
-    if (identifier !== 'dogecoin') {
+    if (identifier !== 'litecoin') {
       return false
     }
 
@@ -233,7 +233,7 @@ export class DogecoinV3SerializerCompanion implements AirGapV3SerializerCompanio
 
     if (
       typeof accountShareResponse.derivationPath !== 'string' ||
-      !accountShareResponse.derivationPath.startsWith("m/44'/3'")
+      !accountShareResponse.derivationPath.startsWith("m/44'/2'")
     ) {
       return false
     }
@@ -254,6 +254,6 @@ export class DogecoinV3SerializerCompanion implements AirGapV3SerializerCompanio
   }
 
   private isExtendedPublicKey(publicKey: string): boolean {
-    return /^(dgub|xpub|ypub|zpub)/.test(publicKey)
+    return /^(xpub|ypub|zpub)/.test(publicKey)
   }
 }

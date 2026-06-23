@@ -1,18 +1,18 @@
 /**
- * Simple API wrapper used by the online protocol to query Dogecoin chain data
+ * Simple API wrapper used by the online protocol to query Litecoin chain data
  * and broadcast transactions. The API must expose endpoints for address
  * balances, UTXO sets and transaction submission. This abstraction allows
  * switching between public APIs or self-hosted indexers without changing
  * protocol logic.
  */
-export interface DogecoinUtxo {
+export interface LitecoinUtxo {
   txid: string
   vout: number
-  value: string // in koinu
+  value: string // in litoshi
   scriptPubKey: string
 }
 
-export interface DogecoinTransaction {
+export interface LitecoinTransaction {
   hash: string
   blockHeight?: number
   timestamp?: number
@@ -20,10 +20,10 @@ export interface DogecoinTransaction {
   outputs: Array<{ address: string; value: string }>
 }
 
-export class DogecoinApi {
+export class LitecoinApi {
   constructor(private readonly baseUrl: string) {}
 
-  private readonly blockchairBaseUrl: string = 'https://api.blockchair.com/dogecoin'
+  private readonly blockchairBaseUrl: string = 'https://api.blockchair.com/litecoin'
 
   private get readBaseUrls(): string[] {
     const urls = [this.blockchairBaseUrl, this.baseUrl]
@@ -55,7 +55,7 @@ export class DogecoinApi {
 
     if (!response.ok) {
       const message = await response.text().catch(() => '')
-      throw new Error(`Dogecoin API request failed: ${response.status}${message ? ` ${message}` : ''}`)
+      throw new Error(`Litecoin API request failed: ${response.status}${message ? ` ${message}` : ''}`)
     }
 
     return response.json()
@@ -81,9 +81,9 @@ export class DogecoinApi {
   }
 
   /**
-   * Fetch the balance of a Dogecoin address in koinu. The API should return
-   * either a raw integer or a string containing the value in koinu (1 DOGE =
-   * 100 000 000 koinu). If the API returns balance in DOGE, multiply by
+   * Fetch the balance of a Litecoin address in litoshi. The API should return
+   * either a raw integer or a string containing the value in litoshi (1 LTC =
+   * 100 000 000 litoshi). If the API returns balance in LTC, multiply by
    * 100 000 000 externally.
    */
   public async getBalance(address: string): Promise<string> {
@@ -111,8 +111,11 @@ export class DogecoinApi {
     if (json.final_balance !== undefined) {
       return String(json.final_balance)
     }
-    if (json.balanceKoinu !== undefined) {
-      return String(json.balanceKoinu)
+    if (json.balanceLitoshi !== undefined) {
+      return String(json.balanceLitoshi)
+    }
+    if (json.balancelitoshi !== undefined) {
+      return String(json.balancelitoshi)
     }
     if (json.balanceSat !== undefined) {
       return String(json.balanceSat)
@@ -120,9 +123,9 @@ export class DogecoinApi {
     if (json.balance !== undefined && Number.isInteger(json.balance)) {
       return String(json.balance)
     }
-    // Many APIs return the field balance (DOGE) or balanceSat (koinu). Try both.
+    // Many APIs return the field balance (LTC) or balanceSat (litoshi). Try both.
     if (json.balance !== undefined) {
-      // assume DOGE and convert to koinu
+      // assume LTC and convert to litoshi
       const floatBalance = Number(json.balance)
       return String(Math.round(floatBalance * 1e8))
     }
@@ -131,10 +134,10 @@ export class DogecoinApi {
 
   /**
    * Retrieve unspent transaction outputs for the given address. Each UTXO
-   * includes the txid (big-endian hex), vout index, value in koinu and
+   * includes the txid (big-endian hex), vout index, value in litoshi and
    * scriptPubKey of the output.
    */
-  public async getUtxos(address: string): Promise<DogecoinUtxo[]> {
+  public async getUtxos(address: string): Promise<LitecoinUtxo[]> {
     const result = await this.getFirstJson((baseUrl) =>
       baseUrl.includes('blockchair.com')
         ? `/dashboards/address/${address}?limit=100`
@@ -179,12 +182,12 @@ export class DogecoinApi {
     return json.utxos.map((u: any) => ({
       txid: u.txid,
       vout: u.vout,
-      value: String(u.valueKoinu ?? u.valueSat ?? u.value),
+      value: String(u.valueLitoshi ?? u.valuelitoshi ?? u.valueSat ?? u.value),
       scriptPubKey: u.scriptPubKey
     }))
   }
 
-  public async getTransactions(address: string, limit: number): Promise<DogecoinTransaction[]> {
+  public async getTransactions(address: string, limit: number): Promise<LitecoinTransaction[]> {
     const result = await this.getFirstJson((baseUrl) =>
       baseUrl.includes('blockchair.com')
         ? `/dashboards/address/${address}?limit=${limit}`
@@ -274,7 +277,7 @@ export class DogecoinApi {
         })
         if (!response.ok) {
           const message = await response.text().catch(() => '')
-          throw new Error(`Failed to broadcast DOGE transaction: ${response.status}${message ? ` ${message}` : ''}`)
+          throw new Error(`Failed to broadcast LTC transaction: ${response.status}${message ? ` ${message}` : ''}`)
         }
         const json = (await response.json()) as any
         if (json.txid !== undefined) {

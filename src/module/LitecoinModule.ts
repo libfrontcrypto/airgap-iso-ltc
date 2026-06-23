@@ -10,17 +10,17 @@ import {
   ProtocolNetwork
 } from '@airgap/module-kit'
 
-import { DogecoinOfflineProtocol } from '../protocol/DogecoinOfflineProtocol'
-import { DogecoinOnlineProtocol } from '../protocol/DogecoinOnlineProtocol'
-import { DogecoinApi } from '../api/DogecoinApi'
-import { DogecoinV3SerializerCompanion } from '../serializer/DogecoinV3SerializerCompanion'
-import { DOGECOIN_MAINNET } from '../protocol/DogecoinProtocolNetwork'
+import { LitecoinOfflineProtocol } from '../protocol/LitecoinOfflineProtocol'
+import { LitecoinOnlineProtocol } from '../protocol/LitecoinOnlineProtocol'
+import { LitecoinApi } from '../api/LitecoinApi'
+import { LitecoinV3SerializerCompanion } from '../serializer/LitecoinV3SerializerCompanion'
+import { LITECOIN_MAINNET } from '../protocol/LitecoinProtocolNetwork'
 
 const createHash = require('@airgap/coinlib-core/dependencies/src/create-hash-1.2.0/browser')
 
-const DOGECOIN_PROTOCOL_IDENTIFIER = 'dogecoin'
-const DOGECOIN_NETWORK_REGISTRY = new ModuleNetworkRegistry({
-  supportedNetworks: [DOGECOIN_MAINNET]
+const LITECOIN_PROTOCOL_IDENTIFIER = 'litecoin'
+const LITECOIN_NETWORK_REGISTRY = new ModuleNetworkRegistry({
+  supportedNetworks: [LITECOIN_MAINNET]
 })
 
 function utf8Bytes(input: string): Uint8Array {
@@ -67,13 +67,13 @@ function protocolNetworkIdentifier(network: ProtocolNetwork): string {
 /**
  * AirGap module wrapper exposing supported protocols and factory methods.
  */
-export class DogecoinModule implements AirGapModule {
+export class LitecoinModule implements AirGapModule {
   private readonly networkRegistries: Record<string, ModuleNetworkRegistry> = {
-    [DOGECOIN_PROTOCOL_IDENTIFIER]: DOGECOIN_NETWORK_REGISTRY
+    [LITECOIN_PROTOCOL_IDENTIFIER]: LITECOIN_NETWORK_REGISTRY
   }
 
   /**
-   * Declare the protocols this module supports. Only one protocol (dogecoin) is
+   * Declare the protocols this module supports. Only one protocol (litecoin) is
    * supported in this module. The identifier must match what the wallet will
    * reference to pick the correct module implementation.
    */
@@ -86,10 +86,10 @@ export class DogecoinModule implements AirGapModule {
   public async createOfflineProtocol(
     identifier: string
   ): Promise<AirGapOfflineProtocol | undefined> {
-    if (identifier !== DOGECOIN_PROTOCOL_IDENTIFIER) {
+    if (identifier !== LITECOIN_PROTOCOL_IDENTIFIER) {
       return undefined
     }
-    return new DogecoinOfflineProtocol() as unknown as AirGapOfflineProtocol
+    return new LitecoinOfflineProtocol() as unknown as AirGapOfflineProtocol
   }
 
   /**
@@ -102,7 +102,7 @@ export class DogecoinModule implements AirGapModule {
     identifier: string,
     networkOrId?: string | ProtocolNetwork
   ): Promise<AirGapOnlineProtocol | undefined> {
-    if (identifier !== DOGECOIN_PROTOCOL_IDENTIFIER) {
+    if (identifier !== LITECOIN_PROTOCOL_IDENTIFIER) {
       return undefined
     }
 
@@ -120,27 +120,27 @@ export class DogecoinModule implements AirGapModule {
       apiUrl = (network as any).extras.apiUrl
     }
     const url = apiUrl ?? network.rpcUrl
-    return new DogecoinOnlineProtocol(new DogecoinApi(url), network) as unknown as AirGapOnlineProtocol
+    return new LitecoinOnlineProtocol(new LitecoinApi(url), network) as unknown as AirGapOnlineProtocol
   }
 
   /**
-   * Provide Dogecoin block explorer links for imported Wallet accounts.
+   * Provide Litecoin block explorer links for imported Wallet accounts.
    */
   public async createBlockExplorer(
     identifier: string,
     _networkOrId?: string | ProtocolNetwork
   ): Promise<AirGapBlockExplorer | undefined> {
-    if (identifier !== DOGECOIN_PROTOCOL_IDENTIFIER) {
+    if (identifier !== LITECOIN_PROTOCOL_IDENTIFIER) {
       return undefined
     }
 
     return {
       getMetadata: async () => ({
         name: 'Blockchair',
-        url: 'https://blockchair.com/dogecoin'
+        url: 'https://blockchair.com/litecoin'
       }),
-      createAddressUrl: async (address: string) => `https://blockchair.com/dogecoin/address/${address}`,
-      createTransactionUrl: async (transactionId: string) => `https://blockchair.com/dogecoin/transaction/${transactionId}`
+      createAddressUrl: async (address: string) => `https://blockchair.com/litecoin/address/${address}`,
+      createTransactionUrl: async (transactionId: string) => `https://blockchair.com/litecoin/transaction/${transactionId}`
     }
   }
 
@@ -150,6 +150,6 @@ export class DogecoinModule implements AirGapModule {
    * for communication between wallet and vault.
    */
   public async createV3SerializerCompanion(): Promise<AirGapV3SerializerCompanion> {
-    return new DogecoinV3SerializerCompanion()
+    return new LitecoinV3SerializerCompanion()
   }
 }

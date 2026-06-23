@@ -12,21 +12,21 @@ import {
 } from '@airgap/module-kit'
 
 import {
-  DogecoinUnits,
-  DogecoinUnsignedTransaction,
-  DogecoinSignedTransaction,
-  DogecoinTxOutput
-} from './DogecoinTypes'
+  LitecoinUnits,
+  LitecoinUnsignedTransaction,
+  LitecoinSignedTransaction,
+  LitecoinTxOutput
+} from './LitecoinTypes'
 import {
-  deriveDogecoinPublicKeyFromExtendedPublicKey,
-  dogecoinAddressFromExtendedPublicKey,
-  dogecoinAddressFromPublicKey
-} from '../crypto/dogecoin-address'
-import { DogecoinApi } from '../api/DogecoinApi'
-import { DOGECOIN_FEE_DEFAULTS, DOGECOIN_MAINNET } from './DogecoinProtocolNetwork'
-import { decodeDogecoinP2PKHOutputs } from '../crypto/dogecoin-tx'
+  deriveLitecoinPublicKeyFromExtendedPublicKey,
+  litecoinAddressFromExtendedPublicKey,
+  litecoinAddressFromPublicKey
+} from '../crypto/litecoin-address'
+import { LitecoinApi } from '../api/LitecoinApi'
+import { LITECOIN_FEE_DEFAULTS, LITECOIN_MAINNET } from './LitecoinProtocolNetwork'
+import { decodeLitecoinP2PKHOutputs } from '../crypto/litecoin-tx'
 
-type DogecoinTransactionCursor = { hasNext: boolean }
+type LitecoinTransactionCursor = { hasNext: boolean }
 
 function normalizeDecimal(value: string): string {
   return value.replace(/^0+(?=\d)/, '')
@@ -87,8 +87,8 @@ function subtractDecimalStrings(left: string, right: string): string {
   return normalizeDecimal(result)
 }
 
-function amountToKoinu(amount: Amount<DogecoinUnits> | { value: string; unit?: string }): string {
-  if (amount.unit === 'DOGE') {
+function amountToLitoshi(amount: Amount<LitecoinUnits> | { value: string; unit?: string }): string {
+  if (amount.unit === 'LTC') {
     return String(Math.round(Number(amount.value) * 1e8))
   }
 
@@ -96,53 +96,53 @@ function amountToKoinu(amount: Amount<DogecoinUnits> | { value: string; unit?: s
 }
 
 /**
- * Online protocol implementation for Dogecoin. Runs on the AirGap Wallet
+ * Online protocol implementation for Litecoin. Runs on the AirGap Wallet
  * application with network access. Fetches balances and UTXOs, builds
  * unsigned transactions and broadcasts signed transactions using an API
  * backend.
  */
-export class DogecoinOnlineProtocol {
+export class LitecoinOnlineProtocol {
   constructor(
-    private readonly api: DogecoinApi,
-    private readonly network: ProtocolNetwork = DOGECOIN_MAINNET
+    private readonly api: LitecoinApi,
+    private readonly network: ProtocolNetwork = LITECOIN_MAINNET
   ) {}
 
   /**
    * Provide the same metadata as the offline protocol. Some wallets may call
    * this to display network information without requiring the vault.
    */
-  public async getMetadata(): Promise<ProtocolMetadata<DogecoinUnits, DogecoinUnits>> {
+  public async getMetadata(): Promise<ProtocolMetadata<LitecoinUnits, LitecoinUnits>> {
     return {
-      identifier: 'dogecoin',
-      name: 'Dogecoin',
+      identifier: 'litecoin',
+      name: 'Litecoin',
       units: {
-        DOGE: { symbol: { value: 'DOGE' }, decimals: 8 },
-        koinu: { symbol: { value: 'koinu' }, decimals: 0 }
+        LTC: { symbol: { value: 'LTC' }, decimals: 8 },
+        litoshi: { symbol: { value: 'litoshi' }, decimals: 0 }
       },
-      mainUnit: 'DOGE',
+      mainUnit: 'LTC',
       fee: {
-        defaults: DOGECOIN_FEE_DEFAULTS
+        defaults: LITECOIN_FEE_DEFAULTS
       },
       account: {
-        standardDerivationPath: "m/44'/3'/0'",
+        standardDerivationPath: "m/44'/2'/0'",
         address: {
           isCaseSensitive: true,
-          placeholder: 'D...',
-          regex: '^D[1-9A-HJ-NP-Za-km-z]{25,34}$'
+          placeholder: 'ltc1...',
+          regex: '^([LM3][1-9A-HJ-NP-Za-km-z]{25,34}|(ltc|LTC)1[02-9ac-hj-np-zAC-HJ-NP-Z]{8,87})$'
         }
       }
     }
   }
 
   /**
-   * Convert a public key into a Dogecoin address using the helper.
+   * Convert a public key into a Litecoin address using the helper.
    */
   public async getAddressFromPublicKey(publicKey: PublicKey | ExtendedPublicKey): Promise<string> {
     switch (publicKey.type) {
       case 'pub':
-        return dogecoinAddressFromPublicKey(publicKey.value)
+        return litecoinAddressFromPublicKey(publicKey.value)
       case 'xpub':
-        return dogecoinAddressFromExtendedPublicKey(publicKey)
+        return litecoinAddressFromExtendedPublicKey(publicKey)
       default:
         throw new Error('Public key type is not supported.')
     }
@@ -189,7 +189,7 @@ export class DogecoinOnlineProtocol {
     visibilityIndex: number,
     addressIndex: number
   ): Promise<PublicKey> {
-    return deriveDogecoinPublicKeyFromExtendedPublicKey(extendedPublicKey, visibilityIndex, addressIndex)
+    return deriveLitecoinPublicKeyFromExtendedPublicKey(extendedPublicKey, visibilityIndex, addressIndex)
   }
 
   public async getNetwork(): Promise<ProtocolNetwork> {
@@ -199,8 +199,8 @@ export class DogecoinOnlineProtocol {
   public async getTransactionsForPublicKey(
     publicKey: PublicKey | ExtendedPublicKey,
     limit: number,
-    cursor?: DogecoinTransactionCursor
-  ): Promise<AirGapTransactionsWithCursor<DogecoinTransactionCursor, DogecoinUnits, DogecoinUnits>> {
+    cursor?: LitecoinTransactionCursor
+  ): Promise<AirGapTransactionsWithCursor<LitecoinTransactionCursor, LitecoinUnits, LitecoinUnits>> {
     const address = await this.getAddressFromPublicKey(publicKey)
     return this.getTransactionsForAddress(address, limit, cursor)
   }
@@ -208,8 +208,8 @@ export class DogecoinOnlineProtocol {
   public async getTransactionsForAddress(
     address: Address,
     limit: number,
-    _cursor?: DogecoinTransactionCursor
-  ): Promise<AirGapTransactionsWithCursor<DogecoinTransactionCursor, DogecoinUnits, DogecoinUnits>> {
+    _cursor?: LitecoinTransactionCursor
+  ): Promise<AirGapTransactionsWithCursor<LitecoinTransactionCursor, LitecoinUnits, LitecoinUnits>> {
     const transactions = await this.api.getTransactions(address, limit)
 
     return {
@@ -223,8 +223,8 @@ export class DogecoinOnlineProtocol {
           from: transaction.inputs.length > 0 ? transaction.inputs : [address],
           to: transaction.outputs.map((output) => output.address),
           isInbound: received !== '0',
-          amount: { value: received, unit: 'koinu' },
-          fee: { value: '0', unit: 'koinu' },
+          amount: { value: received, unit: 'litoshi' },
+          fee: { value: '0', unit: 'litoshi' },
           timestamp: transaction.timestamp,
           network: this.network
         }
@@ -236,8 +236,8 @@ export class DogecoinOnlineProtocol {
   public async getTransactionsForAddresses(
     addresses: Address[],
     limit: number,
-    cursor?: DogecoinTransactionCursor
-  ): Promise<AirGapTransactionsWithCursor<DogecoinTransactionCursor, DogecoinUnits, DogecoinUnits>> {
+    cursor?: LitecoinTransactionCursor
+  ): Promise<AirGapTransactionsWithCursor<LitecoinTransactionCursor, LitecoinUnits, LitecoinUnits>> {
     const results = await Promise.all(addresses.map((address) => this.getTransactionsForAddress(address, limit, cursor)))
 
     return {
@@ -248,31 +248,31 @@ export class DogecoinOnlineProtocol {
 
   /**
    * Fetch the balance of a public key by first converting it to an address.
-   * Balance is returned in koinu (1 DOGE = 100 000 000 koinu)【832165120621745†L320-L481】.
+   * Balance is returned in litoshi (1 LTC = 100 000 000 litoshi)【832165120621745†L320-L481】.
    */
-  public async getBalanceOfPublicKey(publicKey: PublicKey | ExtendedPublicKey): Promise<Balance<DogecoinUnits>> {
+  public async getBalanceOfPublicKey(publicKey: PublicKey | ExtendedPublicKey): Promise<Balance<LitecoinUnits>> {
     const address = await this.getAddressFromPublicKey(publicKey)
     return this.getBalanceOfAddress(address)
   }
 
-  public async getBalanceOfAddress(address: Address): Promise<Balance<DogecoinUnits>> {
+  public async getBalanceOfAddress(address: Address): Promise<Balance<LitecoinUnits>> {
     const balance = await this.api.getBalance(address)
     return {
       total: {
         value: balance,
-        unit: 'koinu'
+        unit: 'litoshi'
       }
     }
   }
 
-  public async getBalanceOfAddresses(addresses: Address[]): Promise<Balance<DogecoinUnits>> {
+  public async getBalanceOfAddresses(addresses: Address[]): Promise<Balance<LitecoinUnits>> {
     const balances = await Promise.all(addresses.map((address) => this.getBalanceOfAddress(address)))
     const total = balances.reduce((sum, balance) => addDecimalStrings(sum, balance.total.value), '0')
 
     return {
       total: {
         value: total,
-        unit: 'koinu'
+        unit: 'litoshi'
       }
     }
   }
@@ -280,20 +280,20 @@ export class DogecoinOnlineProtocol {
   public async getTransactionMaxAmountWithPublicKey(
     publicKey: PublicKey | ExtendedPublicKey,
     _to: Address[],
-    configuration?: { fee?: Amount<DogecoinUnits> }
-  ): Promise<Amount<DogecoinUnits>> {
+    configuration?: { fee?: Amount<LitecoinUnits> }
+  ): Promise<Amount<LitecoinUnits>> {
     const balance = await this.getBalanceOfPublicKey(publicKey)
-    const fee = configuration?.fee !== undefined ? amountToKoinu(configuration.fee) : DOGECOIN_FEE_DEFAULTS.medium.value
+    const fee = configuration?.fee !== undefined ? amountToLitoshi(configuration.fee) : LITECOIN_FEE_DEFAULTS.medium.value
     const hasFee = compareDecimalStrings(balance.total.value, fee) > 0
 
     return {
       value: hasFee ? subtractDecimalStrings(balance.total.value, fee) : '0',
-      unit: 'koinu'
+      unit: 'litoshi'
     }
   }
 
-  public async getTransactionFeeWithPublicKey(): Promise<FeeEstimation<DogecoinUnits>> {
-    return DOGECOIN_FEE_DEFAULTS
+  public async getTransactionFeeWithPublicKey(): Promise<FeeEstimation<LitecoinUnits>> {
+    return LITECOIN_FEE_DEFAULTS
   }
 
   /**
@@ -304,22 +304,22 @@ export class DogecoinOnlineProtocol {
    */
   public async prepareTransactionWithPublicKey(
     publicKey: PublicKey | ExtendedPublicKey,
-    details: DogecoinTxOutput[] | Array<{ to: string; amount: Amount<DogecoinUnits> }>,
-    configuration?: { fee?: Amount<DogecoinUnits> }
-  ): Promise<DogecoinUnsignedTransaction> {
+    details: LitecoinTxOutput[] | Array<{ to: string; amount: Amount<LitecoinUnits> }>,
+    configuration?: { fee?: Amount<LitecoinUnits> }
+  ): Promise<LitecoinUnsignedTransaction> {
     const fromAddress = await this.getAddressFromPublicKey(publicKey)
     const utxos = await this.api.getUtxos(fromAddress)
     const txOutputs = details.map((detail: any) =>
       typeof detail.value === 'string'
-        ? detail as DogecoinTxOutput
+        ? detail as LitecoinTxOutput
         : {
             address: detail.to,
-            value: amountToKoinu(detail.amount)
+            value: amountToLitoshi(detail.amount)
           }
     )
     // Compute total required amount
     const sendTotal = txOutputs.reduce((sum, output) => addDecimalStrings(sum, output.value), '0')
-    const fee = configuration?.fee !== undefined ? amountToKoinu(configuration.fee) : DOGECOIN_FEE_DEFAULTS.medium.value
+    const fee = configuration?.fee !== undefined ? amountToLitoshi(configuration.fee) : LITECOIN_FEE_DEFAULTS.medium.value
     const needed = addDecimalStrings(sendTotal, fee)
     let selected = '0'
     const inputs: any[] = []
@@ -330,7 +330,7 @@ export class DogecoinOnlineProtocol {
         value: utxo.value,
         scriptPubKey: utxo.scriptPubKey,
         address: fromAddress,
-        derivationPath: "m/44'/3'/0'/0/0"
+        derivationPath: "m/44'/2'/0'/0/0"
       })
       selected = addDecimalStrings(selected, utxo.value)
       if (compareDecimalStrings(selected, needed) >= 0) {
@@ -338,9 +338,9 @@ export class DogecoinOnlineProtocol {
       }
     }
     if (compareDecimalStrings(selected, needed) < 0) {
-      throw new Error('Insufficient Dogecoin balance')
+      throw new Error('Insufficient Litecoin balance')
     }
-    const outputs: DogecoinTxOutput[] = [...txOutputs]
+    const outputs: LitecoinTxOutput[] = [...txOutputs]
     const change = subtractDecimalStrings(selected, needed)
     if (compareDecimalStrings(change, '0') > 0) {
       outputs.push({ address: fromAddress, value: change, isChange: true })
@@ -355,10 +355,10 @@ export class DogecoinOnlineProtocol {
   }
 
   /**
-   * Broadcast a signed transaction to the Dogecoin network using the API.
+   * Broadcast a signed transaction to the Litecoin network using the API.
    */
   public async broadcastTransaction(
-    transaction: DogecoinSignedTransaction
+    transaction: LitecoinSignedTransaction
   ): Promise<string> {
     return this.api.broadcast(transaction.transaction)
   }
@@ -369,9 +369,9 @@ export class DogecoinOnlineProtocol {
    * array.
    */
   public async getDetailsFromTransaction(
-    transaction: DogecoinUnsignedTransaction | DogecoinSignedTransaction,
+    transaction: LitecoinUnsignedTransaction | LitecoinSignedTransaction,
     publicKey: PublicKey | ExtendedPublicKey
-  ): Promise<AirGapTransaction<DogecoinUnits, DogecoinUnits>[]> {
+  ): Promise<AirGapTransaction<LitecoinUnits, LitecoinUnits>[]> {
     if (transaction.type === 'signed') {
       return this.getDetailsFromSignedTransaction(transaction, publicKey)
     }
@@ -385,19 +385,19 @@ export class DogecoinOnlineProtocol {
         from: transaction.inputs.map((i) => i.address),
         to: paymentOutputs.map((o) => o.address),
         isInbound: false,
-        amount: { value: total, unit: 'koinu' },
-        fee: { value: transaction.fee, unit: 'koinu' },
+        amount: { value: total, unit: 'litoshi' },
+        fee: { value: transaction.fee, unit: 'litoshi' },
         network: this.network
       }
     ]
   }
 
   private async getDetailsFromSignedTransaction(
-    transaction: DogecoinSignedTransaction,
+    transaction: LitecoinSignedTransaction,
     publicKey: PublicKey | ExtendedPublicKey
-  ): Promise<AirGapTransaction<DogecoinUnits, DogecoinUnits>[]> {
+  ): Promise<AirGapTransaction<LitecoinUnits, LitecoinUnits>[]> {
     const fromAddress = await this.getAddressFromPublicKey(publicKey)
-    const outputs = decodeDogecoinP2PKHOutputs(transaction.transaction)
+    const outputs = decodeLitecoinP2PKHOutputs(transaction.transaction)
     const paymentOutputs = outputs.filter((output) => output.address !== fromAddress)
     const displayedOutputs = paymentOutputs.length > 0 ? paymentOutputs : outputs
     const total = displayedOutputs.reduce((sum, output) => addDecimalStrings(sum, output.value), '0')
@@ -407,11 +407,11 @@ export class DogecoinOnlineProtocol {
         from: [fromAddress],
         to: displayedOutputs.map((output) => output.address),
         isInbound: false,
-        amount: { value: total, unit: 'koinu' },
-        fee: { value: '0', unit: 'koinu' },
+        amount: { value: total, unit: 'litoshi' },
+        fee: { value: '0', unit: 'litoshi' },
         network: this.network,
         transactionDetails: transaction.transaction
-      } as AirGapTransaction<DogecoinUnits, DogecoinUnits>
+      } as AirGapTransaction<LitecoinUnits, LitecoinUnits>
     ]
   }
 }
