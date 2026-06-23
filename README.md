@@ -65,13 +65,15 @@ The signing public key is published in `module/manifest.json`.
 
 ## Support Our Work
 
-If you feel like supporting the developer, here are a couple of different tip addresses:
+If you feel like supporting the developer, here are a couple of different tip addresses
 
 BTC: bc1q7p8ew76ehjrf9rmhdd93xe9lkqpufwkwl56r0e
 
 BTC (LN): libfrontcrypto@coinos.pro
 
 DOGE: DG5vRxuUjFj4SxFU3pcc3HAHgqh8kEiZyC
+
+LTC: LX7yrkNWogGHw7rLfjTrjtigYDkuv6HuWR
 
 ETH/ERC-20: 0x523f461f87170b090732c49bb6722C975C66aa18
 
