@@ -1,5 +1,3 @@
-![Litecoin AirGap banner](assets/litecoin-airgap-banner.svg)
-
 # AirGap Isolated Module for Litecoin
 
 Litecoin isolated module for AirGap Wallet and AirGap Vault.
