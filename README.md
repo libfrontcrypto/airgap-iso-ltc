@@ -10,7 +10,7 @@ https://github.com/libfrontcrypto/airgap-iso-ltc
 
 ## Status
 
-Version `0.1.0` starts the source-first Litecoin test build line. Before publishing any final release, verify the full Wallet/Vault flow with a locally built module zip:
+Version `0.1.1` is the current source-first Litecoin test build. Before publishing any final release, verify the full Wallet/Vault flow with a locally built module zip:
 
 - import isolated module
 - derive Litecoin receive address

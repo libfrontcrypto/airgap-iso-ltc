@@ -20,6 +20,11 @@ export interface LitecoinTransaction {
   outputs: Array<{ address: string; value: string }>
 }
 
+export interface LitecoinBalance {
+  total: string
+  transferable?: string
+}
+
 export class LitecoinApi {
   constructor(private readonly baseUrl: string) {}
 
@@ -69,11 +74,111 @@ export class LitecoinApi {
     }
   }
 
-  private async getFirstJson(paths: (baseUrl: string) => string): Promise<{ baseUrl: string; json: any } | undefined> {
+  private async getJsonResults(paths: (baseUrl: string) => string): Promise<Array<{ baseUrl: string; json: any }>> {
+    const results: Array<{ baseUrl: string; json: any }> = []
     for (const baseUrl of this.readBaseUrls) {
       const json = await this.getJsonOrUndefined(paths(baseUrl), baseUrl)
       if (json !== undefined) {
-        return { baseUrl, json }
+        results.push({ baseUrl, json })
+      }
+    }
+
+    return results
+  }
+
+  private async getFirstJson(paths: (baseUrl: string) => string): Promise<{ baseUrl: string; json: any } | undefined> {
+    return (await this.getJsonResults(paths))[0]
+  }
+
+  private normalizeInteger(value: unknown): string | undefined {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return String(Math.trunc(value))
+    }
+
+    if (typeof value === 'string' && /^\d+$/.test(value)) {
+      return value
+    }
+
+    return undefined
+  }
+
+  private addDecimalStrings(left: string, right: string): string {
+    let carry = 0
+    let result = ''
+    let i = left.length - 1
+    let j = right.length - 1
+
+    while (i >= 0 || j >= 0 || carry > 0) {
+      const sum = (i >= 0 ? left.charCodeAt(i--) - 48 : 0) + (j >= 0 ? right.charCodeAt(j--) - 48 : 0) + carry
+      result = String(sum % 10) + result
+      carry = Math.floor(sum / 10)
+    }
+
+    return result.replace(/^0+(?=\d)/, '')
+  }
+
+  private parseBlockchairBalance(address: string, json: any): LitecoinBalance | undefined {
+    const addressData = json.data?.[address]?.address
+    if (addressData === undefined) {
+      return undefined
+    }
+
+    const confirmed = this.normalizeInteger(addressData.balance)
+    const unconfirmed = this.normalizeInteger(
+      addressData.unconfirmed_balance ??
+      addressData.unconfirmedBalance ??
+      addressData.mempool_balance ??
+      addressData.mempoolBalance
+    )
+
+    if (confirmed === undefined && unconfirmed === undefined) {
+      return undefined
+    }
+
+    return {
+      total: this.addDecimalStrings(confirmed ?? '0', unconfirmed ?? '0'),
+      transferable: confirmed
+    }
+  }
+
+  private parseBlockcypherBalance(json: any): LitecoinBalance | undefined {
+    const finalBalance = this.normalizeInteger(json.final_balance)
+    const confirmed = this.normalizeInteger(json.balance)
+    const unconfirmed = this.normalizeInteger(json.unconfirmed_balance)
+
+    if (finalBalance !== undefined) {
+      return {
+        total: finalBalance,
+        transferable: confirmed
+      }
+    }
+
+    if (confirmed !== undefined || unconfirmed !== undefined) {
+      return {
+        total: this.addDecimalStrings(confirmed ?? '0', unconfirmed ?? '0'),
+        transferable: confirmed
+      }
+    }
+
+    return undefined
+  }
+
+  private parseGenericBalance(json: any): LitecoinBalance | undefined {
+    const total =
+      this.normalizeInteger(json.balanceLitoshi) ??
+      this.normalizeInteger(json.balancelitoshi) ??
+      this.normalizeInteger(json.balanceSat) ??
+      this.normalizeInteger(json.finalBalance) ??
+      this.normalizeInteger(json.balance)
+
+    if (total !== undefined) {
+      return { total }
+    }
+
+    if (json.balance !== undefined) {
+      const floatBalance = Number(json.balance)
+      if (Number.isFinite(floatBalance)) {
+        return { total: String(Math.round(floatBalance * 1e8)) }
       }
     }
 
@@ -86,8 +191,8 @@ export class LitecoinApi {
    * 100 000 000 litoshi). If the API returns balance in LTC, multiply by
    * 100 000 000 externally.
    */
-  public async getBalance(address: string): Promise<string> {
-    const result = await this.getFirstJson((baseUrl) =>
+  public async getBalance(address: string): Promise<LitecoinBalance> {
+    const results = await this.getJsonResults((baseUrl) =>
       baseUrl.includes('blockchair.com')
         ? `/dashboards/address/${address}?limit=0`
         : baseUrl.includes('blockcypher.com')
@@ -95,41 +200,31 @@ export class LitecoinApi {
           : `/address/${address}/balance`
     )
 
-    if (result === undefined) {
-      return '0'
-    }
+    let zeroBalance: LitecoinBalance | undefined
 
-    const { baseUrl, json } = result
+    for (const { baseUrl, json } of results) {
+      const balance = baseUrl.includes('blockchair.com')
+        ? this.parseBlockchairBalance(address, json)
+        : baseUrl.includes('blockcypher.com')
+          ? this.parseBlockcypherBalance(json)
+          : this.parseGenericBalance(json)
 
-    if (baseUrl.includes('blockchair.com')) {
-      const balance = json.data?.[address]?.address?.balance
-      if (balance !== undefined) {
-        return String(balance)
+      if (balance === undefined) {
+        continue
       }
+
+      if (balance.total !== '0') {
+        return balance
+      }
+
+      zeroBalance = balance
     }
 
-    if (json.final_balance !== undefined) {
-      return String(json.final_balance)
+    if (zeroBalance !== undefined) {
+      return zeroBalance
     }
-    if (json.balanceLitoshi !== undefined) {
-      return String(json.balanceLitoshi)
-    }
-    if (json.balancelitoshi !== undefined) {
-      return String(json.balancelitoshi)
-    }
-    if (json.balanceSat !== undefined) {
-      return String(json.balanceSat)
-    }
-    if (json.balance !== undefined && Number.isInteger(json.balance)) {
-      return String(json.balance)
-    }
-    // Many APIs return the field balance (LTC) or balanceSat (litoshi). Try both.
-    if (json.balance !== undefined) {
-      // assume LTC and convert to litoshi
-      const floatBalance = Number(json.balance)
-      return String(Math.round(floatBalance * 1e8))
-    }
-    throw new Error('Unknown balance format')
+
+    return { total: '0' }
   }
 
   /**
@@ -138,7 +233,7 @@ export class LitecoinApi {
    * scriptPubKey of the output.
    */
   public async getUtxos(address: string): Promise<LitecoinUtxo[]> {
-    const result = await this.getFirstJson((baseUrl) =>
+    const results = await this.getJsonResults((baseUrl) =>
       baseUrl.includes('blockchair.com')
         ? `/dashboards/address/${address}?limit=100`
         : baseUrl.includes('blockcypher.com')
@@ -146,45 +241,50 @@ export class LitecoinApi {
           : `/address/${address}/utxos`
     )
 
-    if (result === undefined) {
-      return []
-    }
+    let emptyResult: LitecoinUtxo[] | undefined
 
-    const { baseUrl, json } = result
+    for (const { baseUrl, json } of results) {
+      let utxos: LitecoinUtxo[] | undefined
 
-    if (baseUrl.includes('blockchair.com')) {
-      const data = json.data?.[address]
-      const scriptPubKey = data?.address?.script_hex ?? ''
-      if (!Array.isArray(data?.utxo)) {
-        return []
+      if (baseUrl.includes('blockchair.com')) {
+        const data = json.data?.[address]
+        const scriptPubKey = data?.address?.script_hex ?? ''
+        if (Array.isArray(data?.utxo)) {
+          utxos = data.utxo.map((u: any) => ({
+            txid: u.transaction_hash,
+            vout: u.index,
+            value: String(u.value),
+            scriptPubKey
+          }))
+        }
+      } else if (Array.isArray(json.txrefs) || Array.isArray(json.unconfirmed_txrefs)) {
+        utxos = [...(json.txrefs ?? []), ...(json.unconfirmed_txrefs ?? [])].map((u: any) => ({
+          txid: u.tx_hash,
+          vout: u.tx_output_n,
+          value: String(u.value),
+          scriptPubKey: u.script ?? u.scriptPubKey ?? ''
+        }))
+      } else if (Array.isArray(json.utxos)) {
+        utxos = json.utxos.map((u: any) => ({
+          txid: u.txid,
+          vout: u.vout,
+          value: String(u.valueLitoshi ?? u.valuelitoshi ?? u.valueSat ?? u.value),
+          scriptPubKey: u.scriptPubKey
+        }))
       }
 
-      return data.utxo.map((u: any) => ({
-        txid: u.transaction_hash,
-        vout: u.index,
-        value: String(u.value),
-        scriptPubKey
-      }))
+      if (utxos === undefined) {
+        continue
+      }
+
+      if (utxos.length > 0) {
+        return utxos
+      }
+
+      emptyResult = utxos
     }
 
-    if (Array.isArray(json.txrefs)) {
-      return json.txrefs.map((u: any) => ({
-        txid: u.tx_hash,
-        vout: u.tx_output_n,
-        value: String(u.value),
-        scriptPubKey: u.script ?? u.scriptPubKey ?? ''
-      }))
-    }
-
-    if (!Array.isArray(json.utxos)) {
-      throw new Error('Invalid UTXO response format')
-    }
-    return json.utxos.map((u: any) => ({
-      txid: u.txid,
-      vout: u.vout,
-      value: String(u.valueLitoshi ?? u.valuelitoshi ?? u.valueSat ?? u.value),
-      scriptPubKey: u.scriptPubKey
-    }))
+    return emptyResult ?? []
   }
 
   public async getTransactions(address: string, limit: number): Promise<LitecoinTransaction[]> {

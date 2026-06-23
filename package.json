@@ -1,6 +1,6 @@
 {
   "name": "@libfrontcrypto/airgap-iso-ltc",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Litecoin isolated module for AirGap Wallet and Vault",
   "main": "src/index.ts",
   "scripts": {

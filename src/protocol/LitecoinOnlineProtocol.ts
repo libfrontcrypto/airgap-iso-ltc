@@ -259,7 +259,7 @@ export class LitecoinOnlineProtocol {
     const balance = await this.api.getBalance(address)
     return {
       total: {
-        value: balance,
+        value: balance.total,
         unit: 'litoshi'
       }
     }
