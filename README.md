@@ -10,7 +10,7 @@ https://github.com/libfrontcrypto/airgap-iso-ltc
 
 ## Status
 
-Version `0.1.1` is the current source-first Litecoin test build. Before publishing any final release, verify the full Wallet/Vault flow with a locally built module zip:
+Version `1.0.0` is the first verified Litecoin release build. The full Wallet/Vault flow was verified with the `0.1.1` test build before release:
 
 - import isolated module
 - derive Litecoin receive address
@@ -25,7 +25,7 @@ Version `0.1.1` is the current source-first Litecoin test build. Before publishi
 
 The GitHub project should contain the TypeScript source under `src/`, the signing script under `scripts/`, and the package/build metadata needed to reproduce the module locally.
 
-Generated bundles, signatures, and zip files under `module/` are build artifacts and should not be treated as source.
+Generated bundles and signatures under `module/`, and zip files under `build-artifacts/`, are build artifacts and should not be treated as source.
 
 ## Build
 
@@ -61,7 +61,19 @@ npm run package
 
 The signing public key must match `module/manifest.json` in the built output, not the source tree.
 
-The checked-in manifest public key is suitable for the generated local test artifact in this workspace. Replace it with the release signing public key and sign with the corresponding private key before publishing any public release.
+The signing public key is published in `module/manifest.json`.
+
+## Support Our Work
+
+If you feel like supporting the developer, here are a couple of different tip addresses:
+
+BTC: bc1q7p8ew76ehjrf9rmhdd93xe9lkqpufwkwl56r0e
+
+BTC (LN): libfrontcrypto@coinos.pro
+
+DOGE: DG5vRxuUjFj4SxFU3pcc3HAHgqh8kEiZyC
+
+ETH/ERC-20: 0x523f461f87170b090732c49bb6722C975C66aa18
 
 ## License
 

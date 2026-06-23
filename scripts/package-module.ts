@@ -92,7 +92,7 @@ function main(): void {
   const artifactsDir = join(root, 'build-artifacts')
   const manifest = JSON.parse(readFileSync(join(moduleDir, 'manifest.json'), 'utf8').replace(/^\uFEFF/, ''))
   const version = manifest.version ?? 'dev'
-  const outputPath = join(artifactsDir, `airgap-iso-ltc-${version}-dev.zip`)
+  const outputPath = join(artifactsDir, `airgap-iso-ltc-${version}.zip`)
   const timestamp = new Date(1980, 0, 1, 0, 0, 0)
   const locals: Buffer[] = []
   const centrals: Buffer[] = []
