@@ -43,7 +43,7 @@ export class LitecoinApi {
 
     const controller = typeof AbortController === 'function' ? new AbortController() : undefined
     const timeout = typeof setTimeout === 'function'
-      ? setTimeout(() => controller?.abort(), 8000)
+      ? setTimeout(() => controller?.abort(), 6000)
       : undefined
 
     let response: Response
@@ -86,14 +86,28 @@ export class LitecoinApi {
   }
 
   private async getFirstJson(paths: (baseUrl: string) => string): Promise<{ baseUrl: string; json: any } | undefined> {
-    for (const baseUrl of this.readBaseUrls) {
-      const json = await this.getJsonOrUndefined(paths(baseUrl), baseUrl)
-      if (json !== undefined) {
-        return { baseUrl, json }
-      }
+    const urls = this.readBaseUrls
+    if (urls.length === 0) {
+      return undefined
     }
 
-    return undefined
+    return new Promise<{ baseUrl: string; json: any } | undefined>((resolve) => {
+      let settled = false
+      let remaining = urls.length
+
+      for (const baseUrl of urls) {
+        this.getJsonOrUndefined(paths(baseUrl), baseUrl).then((json) => {
+          remaining--
+          if (!settled && json !== undefined) {
+            settled = true
+            resolve({ baseUrl, json })
+          } else if (!settled && remaining === 0) {
+            settled = true
+            resolve(undefined)
+          }
+        })
+      }
+    })
   }
 
   private normalizeInteger(value: unknown): string | undefined {

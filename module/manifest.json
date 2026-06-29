@@ -1,10 +1,10 @@
 {
   "name": "@libfrontcrypto/litecoin",
-  "version": "1.0.1",
+  "version": "1.0.2-dev.1",
   "author": "libfrontcrypto",
   "url": "https://github.com/libfrontcrypto/airgap-iso-ltc",
   "repository": "https://github.com/libfrontcrypto/airgap-iso-ltc",
-  "publicKey": "0x90718813951d49a8a4f69ee2a6a2e166993f7cdac444abcab01d88362e94a996",
+  "publicKey": "0x764a3e93c383ee89c25126792b460b560dd1a5c8a2d6a0f6ae0851f7799fe2db",
   "description": "Litecoin isolated module for AirGap Wallet and Vault.",
   "src": {
     "namespace": "litecoinModule"
